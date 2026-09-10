@@ -1,0 +1,215 @@
+apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.plugin.compose'
+
+// Module-level opt-in for the CameraX experimental image API. This is the
+// canonical way to use `ImageProxy.image` (annotated @ExperimentalGetImage) and
+// is honoured by both the Kotlin compiler and Android Lint (the source-level
+// @OptIn on the analyzer function is also present for clarity). This is NOT a
+// lint suppression — it is the required opt-in declaration.
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-opt-in=androidx.camera.core.ExperimentalGetImage")
+    }
+}
+
+android {
+    namespace 'com.getauthepay.app'
+    compileSdk = 37
+
+    defaultConfig {
+        applicationId "com.getauthepay.app"
+        minSdk = 26
+        targetSdk = 37
+        versionCode 1
+        versionName "1.0.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        resourceConfigurations += ["en"]
+    }
+
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    /**
+     * AGP 9.0+ ships Kotlin support built in, so the Kotlin JVM target is
+     * driven from compileOptions above. No kotlinOptions block is required.
+     *
+     * SECURITY CONTRACT (enforced by unit tests in SecurityConfigurationTest):
+     *   - SANDBOX_PAYMENTS must be false for the release build type.
+     *   - TEST_OTP_ENABLED must be false for the release build type.
+     *   - ALLOW_CLEARTEXT must be false for the release build type.
+     *
+     * The production release therefore cannot reach the simulator payment
+     * provider or the test OTP shortcut, and cannot emit cleartext traffic.
+     */
+    // Release signing is sourced from local.properties / CI secrets, never from the
+    // repository. The merchant's production keystore (Braincade Holdings) is a deployment
+    // artifact and must not be committed. If RELEASE_STORE_FILE is absent, the release
+    // variant is left unsigned and `assembleRelease` fails loudly (intentional — do not
+    // suppress; supply the keystore via local.properties or CI before distribution).
+    signingConfigs {
+        release {
+            def props = new Properties()
+            def f = rootProject.file("local.properties")
+            if (f.exists()) f.withInputStream { props.load(it) }
+            if (props["RELEASE_STORE_FILE"] != null) {
+                storeFile rootProject.file(props["RELEASE_STORE_FILE"])
+                storePassword props["RELEASE_STORE_PASSWORD"]
+                keyAlias props["RELEASE_KEY_ALIAS"]
+                keyPassword props["RELEASE_KEY_PASSWORD"]
+            }
+        }
+    }
+
+    buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
+            debuggable true
+            minifyEnabled false
+
+            buildConfigField "boolean", "SANDBOX_PAYMENTS", "true"
+            buildConfigField "boolean", "TEST_OTP_ENABLED", "true"
+            buildConfigField "boolean", "ALLOW_CLEARTEXT", "true"
+            buildConfigField "boolean", "PRODUCTION_BUILD", "false"
+            buildConfigField "String", "API_BASE_URL", '"https://sandbox-api.authepay.co.bw"'
+            buildConfigField "String", "ENVIRONMENT_NAME", '"SANDBOX"'
+        }
+
+        staging {
+            initWith debug
+            applicationIdSuffix ".staging"
+            versionNameSuffix "-staging"
+            debuggable false
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            buildConfigField "boolean", "SANDBOX_PAYMENTS", "true"
+            buildConfigField "boolean", "TEST_OTP_ENABLED", "false"
+            buildConfigField "boolean", "ALLOW_CLEARTEXT", "false"
+            buildConfigField "boolean", "PRODUCTION_BUILD", "false"
+            buildConfigField "String", "API_BASE_URL", '"https://staging-api.authepay.co.bw"'
+            buildConfigField "String", "ENVIRONMENT_NAME", '"STAGING"'
+
+            matchingFallbacks = ['debug']
+        }
+
+        release {
+            debuggable false
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (signingConfigs.findByName("release")?.storeFile != null) {
+                signingConfig signingConfigs.release
+            }
+
+            buildConfigField "boolean", "SANDBOX_PAYMENTS", "false"
+            buildConfigField "boolean", "TEST_OTP_ENABLED", "false"
+            buildConfigField "boolean", "ALLOW_CLEARTEXT", "false"
+            buildConfigField "boolean", "PRODUCTION_BUILD", "true"
+            buildConfigField "String", "API_BASE_URL", '"https://api.authepay.co.bw"'
+            buildConfigField "String", "ENVIRONMENT_NAME", '"PRODUCTION"'
+        }
+
+        // Bank-review demonstration build: release-grade hardening (signed, minified, no
+        // cleartext, non-debuggable) but with the sandbox payment rail enabled and the
+        // environment clearly labelled DEMO so simulated transactions can be exercised.
+        demo {
+            initWith release
+            applicationIdSuffix ".demo"
+            versionNameSuffix "-demo"
+            debuggable false
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (signingConfigs.findByName("release")?.storeFile != null) {
+                signingConfig signingConfigs.release
+            }
+
+            buildConfigField "boolean", "SANDBOX_PAYMENTS", "true"
+            buildConfigField "boolean", "TEST_OTP_ENABLED", "true"
+            buildConfigField "boolean", "ALLOW_CLEARTEXT", "false"
+            buildConfigField "boolean", "PRODUCTION_BUILD", "false"
+            buildConfigField "String", "API_BASE_URL", '"https://sandbox-api.authepay.co.bw"'
+            buildConfigField "String", "ENVIRONMENT_NAME", '"DEMO"'
+        }
+    }
+
+    packaging {
+        resources {
+            excludes += ['/META-INF/{AL2.0,LGPL2.1}', 'META-INF/DEPENDENCIES', 'META-INF/LICENSE*']
+        }
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = false
+            all {
+                testLogging {
+                    events "passed", "failed", "skipped"
+                    showStandardStreams = false
+                }
+            }
+        }
+    }
+
+    lint {
+        abortOnError false
+        warningsAsErrors false
+        checkReleaseBuilds true
+        disable += ['GradleCompatible', 'OldTargetApi', 'MissingClass']
+    }
+
+    androidResources {
+        noCompress += ['webp']
+    }
+}
+
+dependencies {
+    // Kotlin stdlib is provided by AGP 9 (built-in Kotlin 2.2.10).
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"
+
+    implementation "androidx.core:core-ktx:1.19.0"
+    implementation "androidx.appcompat:appcompat:1.7.1"
+    implementation "androidx.core:core-splashscreen:1.2.0"
+
+    implementation platform("androidx.compose:compose-bom:2026.08.00")
+    implementation "androidx.compose.ui:ui"
+    implementation "androidx.compose.ui:ui-graphics"
+    implementation "androidx.compose.ui:ui-tooling-preview"
+    implementation "androidx.compose.material3:material3"
+    implementation "androidx.compose.material:material-icons-extended"
+    implementation "androidx.activity:activity-compose:1.13.0"
+    implementation "androidx.navigation:navigation-compose:2.10.0"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0"
+    implementation "androidx.lifecycle:lifecycle-runtime-compose:2.11.0"
+    implementation "androidx.lifecycle:lifecycle-process:2.11.0"
+
+    implementation "androidx.biometric:biometric:1.1.0"
+    implementation "androidx.security:security-crypto:1.1.0"
+
+    implementation "androidx.camera:camera-camera2:1.6.2"
+    implementation "androidx.camera:camera-lifecycle:1.6.2"
+    implementation "androidx.camera:camera-view:1.6.2"
+    implementation "com.google.mlkit:barcode-scanning:17.3.0"
+
+    testImplementation "junit:junit:4.13.2"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2"
+    testImplementation "androidx.arch.core:core-testing:2.2.0"
+
+    debugImplementation "androidx.compose.ui:ui-tooling"
+    debugImplementation "androidx.compose.ui:ui-test-manifest"
+
+    androidTestImplementation "androidx.test.ext:junit:1.3.0"
+    androidTestImplementation "androidx.test.espresso:espresso-core:3.7.0"
+    androidTestImplementation platform("androidx.compose:compose-bom:2026.08.00")
+    androidTestImplementation "androidx.compose.ui:ui-test-junit4"
+}

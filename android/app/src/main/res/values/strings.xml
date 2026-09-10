@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">PayChat</string>
+    <string name="title_activity_main">PayChat</string>
+    <string name="package_name">com.getauthepay.app</string>
+    <string name="custom_url_scheme">com.getauthepay.app</string>
+</resources>

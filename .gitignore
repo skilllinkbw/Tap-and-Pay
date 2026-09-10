@@ -1,0 +1,43 @@
+# ---------- Tap & Pay / AuthePay — root ignores ----------
+
+# --- Android build outputs (also covered by android/.gitignore) ---
+android/**/build/
+android/build/
+*.apk
+*.aab
+*.aar
+*.ap_
+
+# --- Gradle ---
+.gradle/
+android/.gradle/
+*.gradle.kts.orig
+
+# --- Local machine config & secrets (NEVER commit) ---
+android/local.properties
+android/release-keystore.jks
+*.jks
+*.keystore
+*.p12
+*.pem
+.env
+.env.local
+
+# --- IDE / editor ---
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# --- OS ---
+Thumbs.db
+.DS_Store
+
+# --- Node (Capacitor scaffolding retained for reference only) ---
+node_modules/
+
+# --- Scratch / logs ---
+*.log
+debug.log
+.artifacts/
+.workbuddy-ai/

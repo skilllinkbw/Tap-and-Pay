@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 12+ (API 31) backup / device-transfer configuration.
+
+  AuthePay keeps no cardholder data on device, but it does hold a Keystore-bound
+  crypto key (SecurityManager) and EncryptedSharedPreferences (SecureStorage).
+  Those must never leave the device via cloud backup or device-to-device transfer,
+  so every domain is excluded. `android:allowBackup="false"` already disables
+  backup; this file makes the API-31+ intent explicit and silences the
+  allowBackup-deprecation lint warning.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+    </device-transfer>
+</data-extraction-rules>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android auto-backup rules (API < 31). AuthePay holds no cardholder data, but it
+  does keep a Keystore-bound crypto key and EncryptedSharedPreferences. None of it
+  should ever leave the device via auto-backup, so every domain is excluded.
+  `android:allowBackup="false"` already disables backup; this file makes the
+  pre-Android-12 intent explicit (and satisfies the lint fullBackupContent check).
+-->
+<full-backup-content>
+    <exclude domain="root" />
+    <exclude domain="file" />
+    <exclude domain="database" />
+    <exclude domain="sharedpref" />
+</full-backup-content>

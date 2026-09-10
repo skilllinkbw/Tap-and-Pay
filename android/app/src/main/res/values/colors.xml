@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        AuthePay brand palette.
+        Derived from the existing project brand assets (launcher icon / splash)
+        and the AuthePay SoftPOS design reference in www/.
+        These colours back the launch/splash theme; the Compose UI references
+        the mirrored values in ui/theme/Color.kt.
+    -->
+    <color name="authepayNavy">#FF0B1B2F</color>
+    <color name="authepayNavyDark">#FF071320</color>
+    <color name="authepayBlue">#FF2B6CB0</color>
+    <color name="authepayBlueLight">#FFA0C4E8</color>
+    <color name="authepaySuccess">#FF2F855A</color>
+    <color name="authepayWarning">#FFB7791F</color>
+    <color name="authepayDanger">#FFC53030</color>
+
+    <!-- Legacy aliases consumed by styles.xml -->
+    <color name="colorPrimary">@color/authepayNavy</color>
+    <color name="colorPrimaryDark">@color/authepayNavyDark</color>
+    <color name="colorAccent">@color/authepayBlue</color>
+</resources>
