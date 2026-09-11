@@ -134,6 +134,22 @@ class OtpViewModel(
         )
         viewModelScope.launch {
             try {
+                // Debug-only convenience, mirrors LoginViewModel's test
+                // shortcut so offline debug demos can complete the flow.
+                // Unreachable in release builds because
+                // BuildConfig.TEST_OTP_ENABLED is false there.
+                if (BuildConfig.TEST_OTP_ENABLED && isLocalTestIdentifier(identifier)) {
+                    SecureLogger.event(event = "otp.test.resend.shortcut")
+                    _state.value = _state.value.copy(
+                        loading = false,
+                        secondsRemaining = OTP_TTL_SECONDS,
+                        resendCooldownSeconds = RESEND_COOLDOWN_SECONDS,
+                        infoMessage = "TEST MODE: use code 000000 to continue.",
+                    )
+                    startCountdowns()
+                    return@launch
+                }
+
                 when (api.requestOtp(identifier)) {
                     OtpRequestOutcome.SENT -> {
                         _state.value = _state.value.copy(
@@ -163,6 +179,13 @@ class OtpViewModel(
             }
         }
     }
+
+    /**
+     * Local test identifiers are only recognised when TEST_OTP_ENABLED is on
+     * (debug builds) and always go through the network in production.
+     */
+    private fun isLocalTestIdentifier(id: String): Boolean =
+        id.startsWith("+267") || id.contains("test", ignoreCase = true)
 
     private fun registerFailure(reason: String) {
         val used = _state.value.attemptsUsed + 1

@@ -31,10 +31,10 @@ import androidx.compose.ui.text.style.TextAlign
  */
 @Composable
 fun OtpInput(
+    modifier: Modifier = Modifier,
     value: String,
     onValueChange: (String) -> Unit,
     expectedLength: Int = 6,
-    modifier: Modifier = Modifier,
 ) {
     var field by remember(value) {
         mutableStateOf(TextFieldValue(value, TextRange(value.length)))

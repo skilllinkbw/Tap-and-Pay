@@ -108,7 +108,7 @@ fun TransactionHistoryScreen(
         }
 
         when {
-            state.loading && state.all.isEmpty() -> LoadingState("Loading transactions…")
+            state.loading && state.all.isEmpty() -> LoadingState(message ="Loading transactions…")
             state.error != null && state.all.isEmpty() ->
                 ErrorState(state.error!!, onRetry = vm::refresh)
             state.visible.isEmpty() -> EmptyState(

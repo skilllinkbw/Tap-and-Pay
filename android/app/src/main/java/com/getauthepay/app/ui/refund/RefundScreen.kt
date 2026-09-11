@@ -90,7 +90,7 @@ fun RefundScreen(
         onBack = onBack,
     ) {
         when {
-            state.loading -> LoadingState("Loading transaction…")
+            state.loading -> LoadingState(message ="Loading transaction…")
 
             state.notFound -> EmptyState("We could not find that transaction.")
 

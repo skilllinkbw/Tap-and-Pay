@@ -1,9 +1,7 @@
 package com.getauthepay.app.security
 
 import android.content.Context
-import android.os.Build
 import android.util.Base64
-import android.util.Log
 import com.getauthepay.app.core.log.SecureLogger
 import java.io.File
 import javax.crypto.Cipher
@@ -97,13 +95,6 @@ class SecurityManager(private val context: Context) {
 
     companion object {
         private const val TAG = "AuthePaySecurity"
-    }
-
-    init {
-        // Sanity-check Build version for log diagnostics.
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            Log.w(TAG, "AuthePay requires Android 8.0 (API 26) or newer; device is API ${Build.VERSION.SDK_INT}")
-        }
     }
 
     /** Visible for tests. */

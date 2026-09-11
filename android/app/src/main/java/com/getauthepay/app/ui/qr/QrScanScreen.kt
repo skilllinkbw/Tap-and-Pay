@@ -269,7 +269,7 @@ private fun CameraPreview(onCodeDetected: (String) -> Unit) {
  * both the Kotlin compiler and Android Lint treat the usage as intentional
  * (rather than flagging it as an un-opted experimental access).
  */
-@OptIn(ExperimentalGetImage::class)
+@androidx.annotation.OptIn(ExperimentalGetImage::class)
 private fun analyzeCameraFrame(
     proxy: ImageProxy,
     scanner: BarcodeScanner,

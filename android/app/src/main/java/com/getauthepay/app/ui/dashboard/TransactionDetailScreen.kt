@@ -74,7 +74,7 @@ fun TransactionDetailScreen(
         },
     ) {
         when {
-            state.loading -> LoadingState("Loading transaction…")
+            state.loading -> LoadingState(message ="Loading transaction…")
             state.notFound || state.transaction == null ->
                 EmptyState("We could not find that transaction.")
             else -> {

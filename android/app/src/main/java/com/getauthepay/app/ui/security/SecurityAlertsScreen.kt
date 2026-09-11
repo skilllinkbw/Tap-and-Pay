@@ -75,7 +75,7 @@ fun SecurityAlertsScreen(onBack: () -> Unit) {
         },
     ) {
         when (val s = state) {
-            AlertsState.Loading -> LoadingState("Loading alerts…")
+            AlertsState.Loading -> LoadingState(message ="Loading alerts…")
             is AlertsState.Error -> ErrorState(s.message) { reload++ }
             is AlertsState.Loaded -> {
                 if (s.alerts.isEmpty()) {

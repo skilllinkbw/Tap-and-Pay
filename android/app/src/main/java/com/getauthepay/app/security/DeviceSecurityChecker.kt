@@ -1,5 +1,7 @@
 package com.getauthepay.app.security
 
+import android.annotation.SuppressLint
+
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.os.Build
@@ -71,6 +73,7 @@ object DeviceSecurityChecker {
     }
 
     /** True if adb is currently connected. */
+    @SuppressLint("PrivateApi") // deliberate, guarded by runCatching; only consulted when a debugger is attached
     fun isRunningOnAdb(): Boolean {
         return runCatching {
             Class.forName("android.os.ServiceManager")
@@ -80,6 +83,7 @@ object DeviceSecurityChecker {
     }
 
     /** Heuristic only. Bootloader unlock state is not directly readable. */
+    @SuppressLint("PrivateApi") // deliberate, guarded by runCatching; heuristic only, failures return false
     fun isBootloaderUnlockedHint(): Boolean {
         val props = listOf("ro.boot.flash.locked", "ro.boot.verifiedbootstate")
         for (name in props) {

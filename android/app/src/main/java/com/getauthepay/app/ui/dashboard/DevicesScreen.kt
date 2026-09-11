@@ -69,7 +69,7 @@ fun DevicesScreen(onBack: () -> Unit) {
         },
     ) {
         when (val s = state) {
-            DevicesUiState.Loading -> LoadingState("Loading devices…")
+            DevicesUiState.Loading -> LoadingState(message ="Loading devices…")
             is DevicesUiState.Error -> ErrorState(s.message) { reloadKey++ }
             is DevicesUiState.Loaded -> {
                 if (s.devices.isEmpty()) {

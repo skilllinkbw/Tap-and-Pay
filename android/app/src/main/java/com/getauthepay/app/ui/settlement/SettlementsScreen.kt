@@ -67,7 +67,7 @@ fun SettlementsScreen(onBack: () -> Unit) {
         },
     ) {
         when (val s = state) {
-            SettleState.Loading -> LoadingState("Loading settlements…")
+            SettleState.Loading -> LoadingState(message ="Loading settlements…")
             is SettleState.Error -> ErrorState(s.message) { reload++ }
             is SettleState.Loaded -> {
                 if (s.settlements.isEmpty()) {

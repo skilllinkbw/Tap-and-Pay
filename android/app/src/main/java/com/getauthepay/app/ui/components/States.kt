@@ -42,8 +42,8 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun LoadingState(
-    message: String = "Loading…",
     modifier: Modifier = Modifier,
+    message: String = "Loading...",
 ) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
