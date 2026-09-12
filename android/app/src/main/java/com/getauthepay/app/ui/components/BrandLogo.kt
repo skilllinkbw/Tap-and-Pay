@@ -46,7 +46,7 @@ fun BrandLogo(
             contentAlignment = Alignment.Center,
         ) {
             Image(
-                painter = painterResource(R.mipmap.ic_launcher_foreground),
+                painter = painterResource(R.drawable.ic_launcher_foreground),
                 contentDescription = "AuthePay",
                 modifier = Modifier.size((sizeDp * 0.7).dp),
             )
