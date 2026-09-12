@@ -71,3 +71,11 @@ money movement. Sandbox transactions are always labelled. The NFC reader impleme
 Braincade Holdings Pty Ltd — Tap & Pay / AuthePay team.
 See `BANK_DEMO_CHECKLIST.md` for the recommended live-demo script and
 `BANK_SUBMISSION_READINESS.md` for the submission evidence pack.
+
+## Branding on device
+
+Tap & Pay uses the genuine AuthePay monogram on brand navy `#0B1B2F` consistently across the
+launcher icon, adaptive icon, launch splash, login and dashboard. Template/stock assets have been
+removed from active UI; all icon/splash rasters are regenerated at every Android density from the
+vector mark. Partner demonstrations therefore present a single, consistent AuthePay / Tap & Pay
+identity on device.

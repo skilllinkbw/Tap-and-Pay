@@ -139,7 +139,20 @@ adb logcat           # watch for crashes
 
 See `android/docs/PRIVACY_AND_SECURITY.md` and `android/docs/DATA_RETENTION.md`.
 
-## 8. Company
+## 8. Branding
+
+The brand system is built from the genuine AuthePay monogram (byte-preserved from the original
+launcher foreground, template artifacts removed):
+
+- **Mark:** white AuthePay monogram, used consistently by launcher, adaptive icon and in-app
+  `BrandLogo`
+- **Surface:** brand navy `#0B1B2F` (launcher background, adaptive icon, OS launch splash,
+  in-app splash) — replaces the template grey `#333433`
+- **Action blue:** `#2B6CB0` for interactive elements
+- **Assets:** all launcher/splash rasters regenerated at every density (mdpi → xxxhdpi) from the
+  vector mark; store icon 512px; no template/stock assets remain in active UI
+
+## 9. Company
 
 **Braincade Holdings Pty Ltd** — Tap & Pay / AuthePay.
 Legal, terms and in-app disclosures: see the in-app *Settings → About / Terms* screens.
