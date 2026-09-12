@@ -138,6 +138,7 @@ fun AcceptPaymentScreen(
                 AmountEntry(
                     state = state,
                     vm = vm,
+                    onScanQr = onScanQr,
                     modifier = Modifier.padding(padding),
                 )
 
@@ -170,6 +171,7 @@ fun AcceptPaymentScreen(
 private fun AmountEntry(
     state: AcceptPaymentViewModel.UiState,
     vm: AcceptPaymentViewModel,
+    onScanQr: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val amount = runCatching { BigDecimal(state.amountInput) }.getOrNull()
@@ -299,6 +301,20 @@ private fun AmountEntry(
             shape = MaterialTheme.shapes.large,
         ) {
             Text("CONFIRM AMOUNT", style = MaterialTheme.typography.titleMedium)
+        }
+
+        Spacer(Modifier.height(10.dp))
+
+        Text(
+            "Next: tap the customer's card on the back of this device (NFC).",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.semantics {
+                contentDescription = "Next step: tap the customer's contactless card on the back of this device"
+            },
+        )
+        TextButton(onClick = onScanQr) {
+            Text("Customer paying by QR code? Scan instead")
         }
 
         Spacer(Modifier.height(24.dp))

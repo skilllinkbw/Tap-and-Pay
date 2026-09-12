@@ -153,7 +153,7 @@ fun DashboardScreen(
                     )
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        "Tap to start a contactless payment",
+                        "Tap the customer's card — or scan their QR",
                         style = MaterialTheme.typography.labelMedium,
                     )
                 }
