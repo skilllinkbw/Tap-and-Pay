@@ -18,6 +18,7 @@ android/local.properties
 android/release-keystore.jks
 *.jks
 *.keystore
+android/keystore.properties
 *.p12
 *.pem
 .env
