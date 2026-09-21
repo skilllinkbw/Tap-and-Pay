@@ -19,31 +19,25 @@ class IdempotencyStore<T> {
 
     private data class Slot<T>(
         val key: String,
-        var inFlight: Boolean = true,
         var result: T? = null,
     )
 
     private val slots = ConcurrentHashMap<String, Slot<T>>()
 
-    /** Returns true if this is a new key, false if the key is already known. */
-    fun begin(key: String): Boolean {
-        val slot = slots.computeIfAbsent(key) { Slot(key) }
-        return if (slot.inFlight) {
-            slot.inFlight = true
-            true
-        } else {
-            // Already completed — return the cached result; the engine short-circuits.
-            false
-        }
-    }
+    /**
+     * Single-flight gate. Returns true ONLY for the first caller of a key.
+     * Whether the first attempt is still in flight or already completed,
+     * every subsequent caller gets false and must replay the result via
+     * [cached] (or be rejected by the caller). Atomic via
+     * [ConcurrentHashMap.putIfAbsent], so concurrent double-taps on the same
+     * key can never both pass — the previous implementation returned true
+     * for in-flight keys, which broke the single-flight guarantee.
+     */
+    fun begin(key: String): Boolean = slots.putIfAbsent(key, Slot(key)) == null
 
-    /** Records the completed result and marks the slot as finished. */
+    /** Records the completed result. */
     fun complete(key: String, result: T) {
-        val slot = slots[key]
-        if (slot != null) {
-            slot.result = result
-            slot.inFlight = false
-        }
+        slots[key]?.result = result
     }
 
     /** Returns the cached result for [key], or null if not present. */

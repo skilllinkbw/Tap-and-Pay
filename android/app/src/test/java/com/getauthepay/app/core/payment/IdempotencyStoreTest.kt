@@ -87,10 +87,27 @@ class IdempotencyStoreTest {
     }
 
     @Test
-    fun `repeated begin on the same in-flight key stays single-flight`() {
+    fun `repeated begin on the same in-flight key is rejected (single-flight)`() {
+        // Regression: the previous implementation returned true for an
+        // in-flight key, allowing two concurrent submissions of the same
+        // payment. Single-flight means exactly ONE caller may pass begin().
         val store = IdempotencyStore<String>()
         assertTrue(store.begin("k"))
-        assertTrue(store.begin("k"))
+        assertFalse("in-flight duplicate must be rejected", store.begin("k"))
         assertEquals(1, store.size())
+    }
+
+    @Test
+    fun `begin is atomic under concurrent access`() {
+        val store = IdempotencyStore<String>()
+        val winners = java.util.concurrent.atomic.AtomicInteger(0)
+        val threads = (1..16).map {
+            Thread {
+                if (store.begin("race-key")) winners.incrementAndGet()
+            }
+        }
+        threads.forEach { it.start() }
+        threads.forEach { it.join() }
+        assertEquals("exactly one thread may win the single-flight gate", 1, winners.get())
     }
 }

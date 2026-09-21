@@ -9,8 +9,9 @@ Gradle 9.5.0, AGP 9.3.2 (built-in Kotlin 2.2.10), JDK 25 (Android Studio JBR),
 compileSdk/targetSdk 37, minSdk 26.
 
 ## 2. Unit tests pass ✅
-**207 tests, 0 failures, 0 errors** across 13 suites (JVM). Core domain is
-Android-free and fully unit-tested.
+**210 tests, 0 failures, 0 errors** across 13 suites (JVM). Core domain is
+Android-free and fully unit-tested. Includes the double-charge concurrency
+regression suite (atomic single-flight idempotency + terminal mutex).
 
 ## 3. Lint clean (one documented false-positive) ✅⚠️
 `BUILD SUCCESSFUL`. 0 Security issues, 28 low warnings, **1 Error** that is a known

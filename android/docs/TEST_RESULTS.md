@@ -5,7 +5,7 @@ Generated for the verification gate (directive §58): `./gradlew clean test lint
 ## 1. Unit Tests (JVM)
 
 - **Command:** `./gradlew test` (module `app`, `testDebugUnitTest`)
-- **Result:** ✅ **207 tests, 0 failures, 0 errors, 0 skipped** across **13 test suites**.
+- **Result:** ✅ **210 tests, 0 failures, 0 errors, 0 skipped** across **13 test suites**.
 - **Framework:** JUnit 4 + `kotlinx-coroutines-test` (`runTest`). Core domain is Android-free.
 
 Suites (all green): `SecurityConfigurationTest`, `PaymentAcceptanceEngineTest`,

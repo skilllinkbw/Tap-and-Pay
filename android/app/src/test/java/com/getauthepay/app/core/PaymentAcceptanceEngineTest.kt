@@ -15,6 +15,7 @@ import com.getauthepay.app.core.payment.SandboxPaymentProcessor
 import com.getauthepay.app.core.risk.RiskContext
 import com.getauthepay.app.core.risk.RiskService
 import com.getauthepay.app.core.risk.SandboxRiskService
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -449,5 +450,51 @@ class PaymentAcceptanceEngineTest {
             "transport-end failure must not leave an approved sale in the ledger",
             ledger.snapshot().none { it.status == TransactionStatus.APPROVED },
         )
+    }
+
+    // ---- concurrency / double-tap --------------------------------------------
+
+    @Test
+    fun `concurrent submissions of the same payment never double-authorise`() = runTest {
+        // Regression: the engine used to share its state machine across
+        // concurrent collections and IdempotencyStore.begin() returned true
+        // for in-flight keys, so a double-tap during a slow network read
+        // could drive two authorisations for one sale.
+        val processor = CountingProcessor()
+        val ledger = TransactionLedger.empty()
+        val e = engine(processor = processor, ledger = ledger)
+        val req = request(key = "race-1")
+
+        val first = async { e.processPayment(req, riskContext()).toList() }
+        val second = async { e.processPayment(req, riskContext()).toList() }
+        val r1 = first.await().last()
+        val r2 = second.await().last()
+
+        assertEquals("exactly one authorisation may reach the processor", 1, processor.calls)
+        assertEquals("exactly one sale may reach the ledger", 1, ledger.size())
+        // The loser of the race is either the cached replay of the winner or
+        // an explicit in-progress rejection — never a second payment.
+        assertTrue(r1.status.isTerminal())
+        assertTrue(r2.status.isTerminal())
+        assertTrue(
+            "loser must be a replay or an explicit rejection",
+            r1.status == PaymentStatus.APPROVED && r2.status == PaymentStatus.APPROVED ||
+                r1.errorCode == "PAYMENT_IN_PROGRESS" || r2.errorCode == "PAYMENT_IN_PROGRESS" ||
+                r1.errorCode == "DUPLICATE_TRANSACTION" || r2.errorCode == "DUPLICATE_TRANSACTION",
+        )
+    }
+
+    @Test
+    fun `a second payment can start after the first one finishes`() = runTest {
+        // The terminal mutex must be released after every attempt — a
+        // completed (or failed) payment must never wedge the terminal.
+        val processor = CountingProcessor()
+        val e = engine(processor = processor)
+
+        e.processPayment(request(key = "seq-1"), riskContext()).toList()
+        val second = e.processPayment(request(key = "seq-2"), riskContext()).toList().last()
+
+        assertEquals(PaymentStatus.APPROVED, second.status)
+        assertEquals(2, processor.calls)
     }
 }

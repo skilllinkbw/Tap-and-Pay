@@ -16,16 +16,21 @@ African market, part of the **Braincade Holdings Pty Ltd / AuthePay** ecosystem.
 |---|---|
 | `android/` | Canonical Android application (Kotlin, Jetpack Compose, Material 3) |
 | `android/docs/` | Architecture, security, testing and certification documentation |
-| `www/` | Original brand/website reference material (AuthePay Tap & Pay HTML) |
+| `docs/` | Commercial/legal/bank documentation: privacy, terms, acceptable use, retention, security architecture, threat model, incident response, bank brief + due-diligence checklist, product readiness |
+| `dist/` | Built release artifacts (APK/AAB) for review |
 
-The Android app is the single canonical implementation. The `www/` folder is reference/branding
-material only.
+The Android app is the single canonical implementation. Early web/Capacitor
+prototype files (`www/`, root `package.json`, copied `assets/public` web assets)
+were removed in the final hardening pass: they were unused by the native app and
+contained outdated marketing claims (e.g. "PCI Compliant", camera card scanning)
+that the product deliberately does not make. They remain available in Git
+history if ever needed for reference.
 
 ## 2. Component status
 
 | Component | Status | Notes |
 |---|---|---|
-| Android app (splash, onboarding, login/OTP, dashboard, Accept Payment, QR scan, history, detail, refunds, settlements, devices, team, security alerts, settings, help, about) | **LIVE** | Fully implemented, 207 unit tests |
+| Android app (splash, onboarding, login/OTP, dashboard, Accept Payment, QR scan, history, detail, refunds, settlements, devices, team, security alerts, settings, help, about) | **LIVE** | Fully implemented, 210 unit tests |
 | Payments rail (sandbox) | **SANDBOX** | `SandboxPaymentProvider` simulates provider responses end-to-end via a real state machine; clearly labelled in-app |
 | Payments rail (AuthePay production API) | **NOT YET CONNECTED** | `PaymentProvider` interface + `AuthePayProvider` boundary ready for real credentials/contract |
 | Bank / mobile-money (Orange Money BW etc.) rails | **NOT YET CONNECTED** | Isolated `MobileMoneyProvider`/`BankProvider` adapter boundaries only |
@@ -103,9 +108,9 @@ key: before Play release, replace it with the merchant production keystore suppl
 
 ## 5. Testing
 
-- **Unit tests:** `.\gradlew.bat testDebugUnitTest` — 207 tests covering payment state machine,
-  idempotency, OTP/session handling, refund/reversal logic, receipt generation, HTTP client and
-  security managers.
+- **Unit tests:** `.\gradlew.bat testDebugUnitTest` — 210 tests covering payment state machine,
+  idempotency (including concurrent double-tap single-flight), OTP/session handling,
+  refund/reversal logic, receipt generation, HTTP client and security managers.
 - **Lint:** `.\gradlew.bat lintDebug` — must report **0 errors**.
 - **Smoke test on device:** enable USB debugging, then
 
@@ -138,6 +143,11 @@ adb logcat           # watch for crashes
   never ask for them.
 
 See `android/docs/PRIVACY_AND_SECURITY.md` and `android/docs/DATA_RETENTION.md`.
+Commercial/legal documents (privacy policy, terms, acceptable use, retention) live in
+[`docs/legal/`](docs/legal/); security architecture, threat model and incident response in
+[`docs/security/`](docs/security/); bank-facing material in [`docs/bank/`](docs/bank/);
+honest status in [`docs/PRODUCT_READINESS.md`](docs/PRODUCT_READINESS.md) and
+[`FINAL_RELEASE_REPORT.md`](FINAL_RELEASE_REPORT.md).
 
 ## 8. Branding
 

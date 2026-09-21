@@ -16,6 +16,7 @@ import com.getauthepay.app.core.risk.RiskService
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.sync.Mutex
 import java.util.UUID
 
 /**
@@ -68,6 +69,16 @@ class PaymentAcceptanceEngine(
 
     private val stateMachine = PaymentStateMachine()
 
+    /**
+     * One payment at a time per terminal. The engine shares a state machine,
+     * the NFC radio and the cancellation flag, so two concurrent collections
+     * of [processPayment] would corrupt each other (a second collector used
+     * to reset the shared state machine mid-payment). A terminal is a
+     * single-lane device by definition, so concurrent attempts are rejected
+     * with a clear, non-destructive result instead of being queued.
+     */
+    private val paymentMutex = Mutex()
+
     @Volatile
     private var cancellationRequested: Boolean = false
 
@@ -94,6 +105,39 @@ class PaymentAcceptanceEngine(
         request: PaymentRequest,
         riskContext: RiskContext,
     ): Flow<PaymentResult> = flow {
+        if (!paymentMutex.tryLock()) {
+            // Another payment attempt is actively using this terminal (shared
+            // state machine + NFC radio). Never run a second attempt over the
+            // top of it, and never touch the ledger/idempotency store here —
+            // the in-flight attempt owns those writes.
+            SecureLogger.event(
+                event = "engine.payment.concurrent_rejected",
+                transactionId = request.requestId,
+                status = PaymentStatus.DECLINED.name,
+            )
+            emit(
+                PaymentResult(
+                    requestId = request.requestId,
+                    status = PaymentStatus.DECLINED,
+                    transactionId = ReferenceIds.transaction(request.requestId),
+                    errorCode = "PAYMENT_IN_PROGRESS",
+                    errorMessage = "Another payment is already in progress on this terminal. " +
+                        "Wait for it to finish before starting the next one.",
+                ),
+            )
+            return@flow
+        }
+        try {
+            runPaymentAttempt(request, riskContext).collect { emit(it) }
+        } finally {
+            paymentMutex.unlock()
+        }
+    }
+
+    private fun runPaymentAttempt(
+        request: PaymentRequest,
+        riskContext: RiskContext,
+    ): Flow<PaymentResult> = flow {
         cancellationRequested = false
         stateMachine.reset(PaymentStatus.CREATED)
 
@@ -112,7 +156,30 @@ class PaymentAcceptanceEngine(
             emit(cached)
             return@flow
         }
-        idempotency.begin(request.idempotencyKey)
+        if (!idempotency.begin(request.idempotencyKey)) {
+            // Defensive: with the terminal mutex above this is only reachable
+            // if a slot exists without a completed result (e.g. a prior
+            // attempt was interrupted mid-flight on this same engine). Never
+            // start a second authorisation for a key that is already claimed.
+            SecureLogger.event(
+                event = "engine.payment.duplicate_in_flight",
+                correlationId = correlationId,
+                transactionId = request.requestId,
+                status = PaymentStatus.DECLINED.name,
+            )
+            emit(
+                PaymentResult(
+                    requestId = request.requestId,
+                    status = PaymentStatus.DECLINED,
+                    transactionId = ReferenceIds.transaction(request.requestId),
+                    correlationId = correlationId,
+                    errorCode = "DUPLICATE_TRANSACTION",
+                    errorMessage = "This payment was already submitted and is still being processed. " +
+                        "No second charge was made.",
+                ),
+            )
+            return@flow
+        }
 
         SecureLogger.event(
             event = "engine.payment.start",

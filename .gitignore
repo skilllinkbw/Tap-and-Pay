@@ -11,6 +11,7 @@ android/build/
 # --- Gradle ---
 .gradle/
 android/.gradle/
+android/.kotlin/
 *.gradle.kts.orig
 
 # --- Local machine config & secrets (NEVER commit) ---
